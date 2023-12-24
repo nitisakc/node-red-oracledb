@@ -1,0 +1,31 @@
+{
+  "name": "@nitisakc/node-red-oracledb",
+  "version": "1.0.6",
+  "description": "node-red-oracledb",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node-red",
+    "oracle",
+    "oracledb"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "object-resolve-path": "^1.1.1",
+    "oracledb": "^5.5.0"
+  },
+  "node-red": {
+      "nodes": {
+        "oracle-server": "method/oracle-server/oracle-server.js",
+        "execute": "method/oracle-exec/oracle-exec.js",
+        "stored": "method/stored/stored.js"
+      }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nitisakc/node-red-oracledb.git"
+  }
+}

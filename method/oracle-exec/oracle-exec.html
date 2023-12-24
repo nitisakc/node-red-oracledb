@@ -1,0 +1,204 @@
+<script type="text/x-red" data-template-name="oracle-exec">
+    <style>
+        ol#node-input-rule-container .red-ui-typedInput-container {
+            flex:1;
+        }
+        textarea { resize: vertical;  } 
+    </style>
+  
+    <div class="form-row">
+        <ul style="background: #fff; min-width: 600px; margin-bottom: 20px;" id="node-input-oracle-out-tabs"></ul>
+    </div>
+    <div id="node-input-oracle-out-tabs-content" style="min-height: 170px;">
+        <div id="oracle-out-tab-connection" style="display:none">
+              <div class="form-row">
+                  <label for="node-input-server"><i class="fa fa-globe"></i> Server</label>
+                  <input type="text" id="node-input-server">
+              </div>
+
+              <br/>
+              <div class="form-row">
+                  <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+                  <input type="text" id="node-input-name" placeholder="Name">
+              </div>
+        </div>
+        <div id="oracle-out-tab-query" style="display:none">
+            <div class="form-row" style="margin-bottom: 0px">
+                <input type="checkbox" id="node-input-usequery" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-input-usequery" style="width: 80%;">always execute this Oracle SQL statement (even if <i>msg.query</i> exists):</label>
+            </div>
+
+            <div class="form-row node-input-rule-container-row">
+                <ol id="node-input-rule-container" style="min-height:500px; max-height:500px;"></ol>
+            </div>          
+        </div>
+        <div id="oracle-out-tab-results" style="display:none">
+            <div class="form-row">
+                <label for="node-input-resultaction"><i class="fa fa-hand-o-right"></i> Action</label>
+                <select type="text" id="node-input-resultaction" style="width: 270px;">
+                    <option value="none">ignore query results</option>
+                    <option value="single">send single query result message</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="node-input-error"><i class="fa fa-hashtag"></i> Error</label>
+                <input type="text" id="node-input-error" placeholder="error">
+            </div>
+
+            <div class="form-row">
+                <input type="checkbox" id="node-input-prepare" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-input-prepare" style="width: 80%;">SQL Prepare Statements.</label>
+            </div>
+
+            <div class="form-row">
+                <input type="checkbox" id="node-input-remove" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-input-remove" style="width: 80%;">Remove param not use.</label>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="oracle-exec">
+</script>
+
+<script type="text/javascript">
+
+RED.nodes.registerType("oracle-exec", {
+    category: "Ingeni Oracledb",
+    defaults: {
+        name: { value: "" },
+        usequery: { value: false },
+        prepare: { value: true },
+        error: { value: "error" },
+        remove: { value: false },
+        query: { value: [] },
+        server: { type: "oracle-server", required: true },
+        resultaction: { value: "single" }
+    },
+    inputs: 1,
+    outputs: 2,
+    color: "#ff6666",
+    icon: "font-awesome/fa-database",
+    align: "right",
+    label: function () {
+        return this.name || "Execute";
+    },
+    labelStyle: function () {
+        return this.name ? "node_label_italic" : "";
+    },
+    oneditprepare: function () {
+        $("#node-input-error").typedInput({types:['msg']});
+        $("ol#node-input-rule-container").editableList({
+            addItem: function(row, index, data) {
+                let fragment = document.createDocumentFragment();
+                var withOut = { value: "wop", label: "With out", hasValue: false };
+                
+                $(fragment).append('<label for="node-input-sqlname" style="width: 70px;" ><i class="fa fa-tag"></i> <span>Result: </span></label>');
+                $('<input/>', { class: "node-input-sqlname", style: "width:30%;" , type: "text", required: "required"})
+                    .appendTo(fragment)
+                    .typedInput({ 
+                        types: ['msg']
+                    })
+                    .typedInput('value', Object.keys(data).length > 0 ? data.name : 'result'+ (index+1));
+
+                let { type, value } = data.param || { type: 'wop', value: '' };
+                $(fragment).append('<label for="node-input-params" style="margin-left:20px; margin-bottom:15px; width: 82px;" ><i class="fa fa-list"></i> <span>Params: </span></label>');
+                $('<input/>', { class: "node-input-params", style: "width:30%;" , type: "text"})
+                    .appendTo(fragment)
+                    .typedInput({ default: type || 'wop', types:['msg', withOut] })
+                    .typedInput('value', value || '');
+
+                var textarea = $('<textarea/>', { style: "width:100%" });
+                textarea.val(data.sql || '');
+                textarea.appendTo(fragment);
+
+                row[0].appendChild(fragment);
+            },
+            removable: true,
+            sortable: true
+        });
+        $("ol#node-input-rule-container").editableList('addItems', this.query);
+
+        var visibleTab = "query";
+        var tabs = RED.tabs.create({
+            id: "node-input-oracle-out-tabs",
+            onchange: function (tab) {
+                $("#node-input-oracle-out-tabs-content").children().hide();
+                $("#" + tab.id).show();
+                if (tab.id === "oracle-out-tab-query") {
+                    visibleTab = "query";
+                    functionDialogResize();
+                }
+            }
+        });
+        tabs.addTab({
+            id: "oracle-out-tab-connection",
+            label: "Server connection"
+        });
+        tabs.addTab({
+            id: "oracle-out-tab-query",
+            label: "SQL query"
+        });
+        tabs.addTab({
+            id: "oracle-out-tab-results",
+            label: "Options"
+        });
+        setTimeout(function () { tabs.resize(); }, 0);
+        
+        function functionDialogResize() {
+            var height = $("#dialog-form").height();
+            height -= $("#node-input-oracle-out-tabs").outerHeight(true);
+            var rows = $("#oracle-out-tab-" + visibleTab + ">div:not(.node-input-" + visibleTab + "-text-editor-row)");
+            for (var i = 0; i < rows.length; i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+            var editorRow = $("#dialog-form>div.node-input-" + visibleTab + "-text-editor-row");
+            if (editorRow.css("marginTop")) {
+                height -= parseInt(editorRow.css("marginTop"), 10);
+            }
+            if (editorRow.css("marginBottom")) {
+                height -= parseInt(editorRow.css("marginBottom"), 10);
+            }
+            height -= 5;
+            $("#node-input-" + visibleTab + "-editor").css("height", height + "px");
+            if (visibleTab === "query") {
+                // queryEditor.resize();
+            }
+            else {
+                mappingsEditor.resize();
+            }
+        }
+        var d = $("#dialog");
+        d.on("dialogresize", functionDialogResize);
+        d.one("dialogopen", function (ev) {
+            var size = d.dialog("option", "sizeCache-function");
+            if (size) {
+                d.dialog("option", "width", size.width);
+                d.dialog("option", "height", size.height);
+                functionDialogResize();
+            }
+        });
+        d.one("dialogclose", function (ev, ui) {
+            var height = d.dialog("option", "height");
+            d.off("dialogresize", functionDialogResize);
+        });
+    },
+    oneditsave: function () {
+        var input = $("ol#node-input-rule-container").editableList('items');
+        var node = this;
+        node.query = [];
+        input.each(function (i) {
+            console.log(input[i].find("textarea").val());
+            node.query.push({
+                sql: input[i].find("textarea").val(),
+                name: input[i].find(".node-input-sqlname").typedInput('value'),
+                param:{
+                    type: input[i].find(".node-input-params").typedInput('type'),
+                    value: input[i].find(".node-input-params").typedInput('value'),
+                }
+            });
+        });
+    }
+});
+
+</script>
