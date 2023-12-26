@@ -1,6 +1,6 @@
 {
   "name": "@nitisakc/node-red-oracledb",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "node-red-oracledb",
   "main": "index.js",
   "scripts": {
