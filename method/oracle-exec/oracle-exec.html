@@ -29,7 +29,7 @@
             </div>
 
             <div class="form-row node-input-rule-container-row">
-                <ol id="node-input-rule-container" style="min-height:500px; max-height:500px;"></ol>
+                <ol id="node-input-rule-container" style="min-height:600px; max-height:600px;"></ol>
             </div>          
         </div>
         <div id="oracle-out-tab-results" style="display:none">
@@ -108,8 +108,19 @@ RED.nodes.registerType("oracle-exec", {
                     .typedInput({ default: type || 'wop', types:['msg', withOut] })
                     .typedInput('value', value || '');
 
-                var textarea = $('<textarea/>', { style: "width:100%" });
-                textarea.val(data.sql || '');
+                let sql = data.sql || '';
+                var textarea = $('<textarea/>', { style: "width:100%", class: "input-textarea" });
+                textarea.attr("rows", sql.trim() == '' ? "3" : sql.split('\n').length + 0 + "");
+                textarea.val(sql);
+
+                let change = ()=>{
+                    let e = $(textarea).val();
+                    let rows = e.split('\n').length;
+                    $(textarea).attr("rows", e.trim() == '' ? 3 : rows < 3 ? 3 : rows);
+                }
+                $(textarea)
+                    .keydown(change)
+                    .change(change);
                 textarea.appendTo(fragment);
 
                 row[0].appendChild(fragment);
@@ -143,6 +154,7 @@ RED.nodes.registerType("oracle-exec", {
             id: "oracle-out-tab-results",
             label: "Options"
         });
+        tabs.activateTab("oracle-out-tab-query");
         setTimeout(function () { tabs.resize(); }, 0);
         
         function functionDialogResize() {
