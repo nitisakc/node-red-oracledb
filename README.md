@@ -4,7 +4,7 @@
 
 
 ## Example flow:
-![example flow](https://raw.githubusercontent.com/nitisakc/node-red-oracledb/name/example.jpg)
+![example flow](https://github.com/nitisakc/node-red-oracledb/blob/main/example.jpg?raw=true)
 
 Example flow:
 
