@@ -1,6 +1,6 @@
 {
   "name": "@nitisakc/node-red-oracledb",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "node-red-oracledb",
   "main": "index.js",
   "scripts": {
@@ -18,10 +18,10 @@
     "oracledb": "^5.5.0"
   },
   "node-red": {
-      "nodes": {
-        "oracle-server": "method/oracle-server/oracle-server.js",
-        "execute": "method/oracle-exec/oracle-exec.js"
-      }
+    "nodes": {
+      "oracle-server": "method/oracle-server/oracle-server.js",
+      "execute": "method/oracle-exec/oracle-exec.js"
+    }
   },
   "repository": {
     "type": "git",

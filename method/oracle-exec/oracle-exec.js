@@ -1,4 +1,33 @@
 const { log } = require("console");
+const pattern = /\${([^}]+)}/g;
+// const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter}`).toUpperCase();
+//object = sources.reduce((a,b)=> Object.assign(a, b))
+
+// const insert = (name, param)=>{
+//     let object = Array.isArray(param) ? param.reduce((a,b)=> Object.assign(a, b)) : param;
+//     object = Object.keys(object);
+//     let output = `INSERT INTO ${name.toUpperCase()} (${object.join(', ')})`;
+// }
+
+const checkParams = (sql, param)=>{
+    if(Array.isArray(param)){
+        let output = [];
+        param.forEach((e, i)=>{
+            output.push(removeParam(sql, e));
+        });
+        return output;
+    }else if(typeof param === 'object' || param instanceof Object){
+        return removeParam(sql, param);
+    }
+};
+
+const removeParam = (sql, param)=>{
+    sql = sql.toUpperCase()
+    Object.keys(param).forEach((e, i)=>{
+        if(sql.indexOf(`:${e.toUpperCase()}`) < 0) delete param[e];
+    });
+    return param;
+}
 
 module.exports = function (RED) {
     "use strict";
@@ -52,28 +81,15 @@ module.exports = function (RED) {
         node.oracleType = "storage";
         node.serverStatus = null;
 
-        let checkParams = (sql, param)=>{
-            if(Array.isArray(param)){
-                let output = [];
-                param.forEach((e, i)=>{
-                    output.push(removeParam(sql, e));
-                });
-                return output;
-            }else if(typeof param === 'object' || param instanceof Object){
-                return removeParam(sql, param);
-            }
-        };
-
-        let removeParam = (sql, param)=>{
-            sql = sql.toUpperCase()
-            Object.keys(param).forEach((e, i)=>{
-                if(sql.indexOf(`:${e.toUpperCase()}`) < 0) delete param[e];
-            });
-            return param;
-        }
-
         node.on("input", function (msg) {
             var query;
+            var globalContext = node.context().global;
+            var flowContext = node.context().flow;
+
+            let getEnv = (name)=> RED.util.evaluateNodeProperty(name,'env',node);
+            let getFlow = (name)=> flowContext.get(name);
+            let getGlobal = (name)=> globalContext.get(name);
+            let getMsg = (name)=> RED.util.getMessageProperty(msg, name);
 
             if (node.useQuery || !msg.query) {
                 query = [];
@@ -86,6 +102,17 @@ module.exports = function (RED) {
                     }
 
                     if(node.remove) checkParams(e.sql, param);
+
+                    let matches = e.sql.match(pattern);
+                    if(matches){
+                        matches.forEach((match)=>{
+                            try {
+                                e.sql = e.sql.replace(match, eval(match.replace(/\${|}/g, '')));
+                            } catch (error) {
+                                // console.log(error.message);
+                            }
+                        });
+                    }
 
                     query.push({
                         name: e.name || '',
