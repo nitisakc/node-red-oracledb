@@ -104,13 +104,15 @@ module.exports = function (RED) {
                     if(node.remove) checkParams(e.sql, param);
 
                     let matches = e.sql.match(pattern);
-                    matches.forEach((match)=>{
-                        try {
-                            e.sql = e.sql.replace(match, eval(match.replace(/\${|}/g, '')));
-                        } catch (error) {
-                            console.log(error.message);
-                        }
-                    });
+                    if(matches){
+                        matches.forEach((match)=>{
+                            try {
+                                e.sql = e.sql.replace(match, eval(match.replace(/\${|}/g, '')));
+                            } catch (error) {
+                                // console.log(error.message);
+                            }
+                        });
+                    }
 
                     query.push({
                         name: e.name || '',
