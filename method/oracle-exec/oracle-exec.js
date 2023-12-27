@@ -1,4 +1,3 @@
-const { log } = require("console");
 const pattern = /\${([^}]+)}/g;
 // const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter}`).toUpperCase();
 //object = sources.reduce((a,b)=> Object.assign(a, b))
@@ -32,41 +31,7 @@ const removeParam = (sql, param)=>{
 module.exports = function (RED) {
     "use strict";
     var oracledb = require("oracledb");
-    var resolvePath = require("object-resolve-path");
-    var events = require("events");
-    var util = require("util");
     oracledb.fetchAsBuffer = [oracledb.BLOB];
-
-    function initialize(node) {
-        if (node.server) {
-            node.status({ fill: "grey", shape: "dot", text: "unconnected" });
-            //node.serverStatus = node.server.claimConnection();
-            node.serverStatus = node.server.status;
-            node.serverStatus.on("connecting", function () {
-                node.status({ fill: "green", shape: "ring", text: "connecting" });
-            });
-            node.serverStatus.on("connected", function () {
-                node.status({ fill: "green", shape: "dot", text: "connected" });
-                //node.initialize();
-            });
-            node.serverStatus.on("closed", function () {
-                node.status({ fill: "red", shape: "ring", text: "disconnected" });
-            });
-            node.serverStatus.on("error", function () {
-                node.status({ fill: "red", shape: "dot", text: "connect error" });
-            });
-            node.serverStatus.on("reconnecting", function () {
-                node.status({ fill: "red", shape: "ring", text: "reconnecting" });
-            });
-            node.on("close", function () {
-                node.server.freeConnection();
-            });
-        }
-        else {
-            node.status({ fill: "red", shape: "dot", text: "error" });
-            node.error("Oracle " + node.oracleType + " error: missing Oracle server configuration");
-        }
-    }
 
     function Execute(n) {
         var node = this;
@@ -80,6 +45,18 @@ module.exports = function (RED) {
         node.server = RED.nodes.getNode(n.server);
         node.oracleType = "storage";
         node.serverStatus = null;
+
+        node.setStatus = (status)=>{
+            if(status == "connecting"){
+                node.status({ fill: "yellow", shape: "ring", text: "connecting" });
+            }else if(status == "execute"){
+                node.status({ fill: "orange", shape: "dot", text: "execute" });
+            }else if(status == "success"){
+                node.status({ fill: "green", shape: "ring", text: "success" });
+            }else if(status == "success"){
+                node.status({ fill: "red", shape: "ring", text: "erroe" });
+            }
+        }
 
         node.on("input", function (msg) {
             var query;
@@ -145,11 +122,10 @@ module.exports = function (RED) {
                     node.send([msg,null]);
                 }else{
                     var resultAction = msg.resultAction || node.resultAction;
-                    node.server.query(msg, node, query, {}, resultAction, node.errorName || 'error');
+                    node.server.execute(msg, node, query, {}, resultAction, node.errorName || 'error');
                 }
             }
         });
-        initialize(node);
     }
     RED.nodes.registerType("oracle-exec", Execute);
 };
