@@ -46,15 +46,17 @@ module.exports = function (RED) {
         node.oracleType = "storage";
         node.serverStatus = null;
 
-        node.setStatus = (status)=>{
+        node.setStatus = (status, err)=>{
             if(status == "connecting"){
-                node.status({ fill: "yellow", shape: "ring", text: "connecting" });
+                node.status({ fill: "grey", shape: "ring", text: "connecting" });
+            }else if(status == "Connected"){
+                node.status({ fill: "blue", shape: "ring", text: "Connected" });
             }else if(status == "execute"){
-                node.status({ fill: "orange", shape: "dot", text: "execute" });
+                node.status({ fill: "yellow", shape: "ring", text: "execute" });
             }else if(status == "success"){
-                node.status({ fill: "green", shape: "ring", text: "success" });
-            }else if(status == "success"){
-                node.status({ fill: "red", shape: "ring", text: "erroe" });
+                node.status({ fill: "green", shape: "dot", text: "success" });
+            }else if(status == "error"){
+                node.status({ fill: "red", shape: "dot", text: err || "error" });
             }
         }
 
