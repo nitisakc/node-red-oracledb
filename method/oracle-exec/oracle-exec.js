@@ -30,8 +30,6 @@ const removeParam = (sql, param)=>{
 
 module.exports = function (RED) {
     "use strict";
-    var oracledb = require("oracledb");
-    oracledb.fetchAsBuffer = [oracledb.BLOB];
 
     function Execute(n) {
         var node = this;
