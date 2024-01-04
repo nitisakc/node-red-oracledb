@@ -68,9 +68,9 @@ RED.nodes.registerType("oracle-exec", {
     defaults: {
         name: { value: "" },
         usequery: { value: false },
-        prepare: { value: true },
+        prepare: { value: false },
         error: { value: "error" },
-        remove: { value: false },
+        remove: { value: true },
         query: { value: [] },
         server: { type: "oracle-server", required: true },
         resultaction: { value: "single" }

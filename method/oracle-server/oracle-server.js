@@ -1,8 +1,11 @@
+const { release } = require("process");
+
 module.exports = function (RED) {
     
     "use strict";
     var oracledb = require("oracledb");
     oracledb.fetchAsBuffer = [oracledb.BLOB];
+    oracledb.fetchAsString = [oracledb.CLOB];
     function OracleServer(n) {
         var node = this;
         RED.nodes.createNode(node, n);
@@ -36,7 +39,7 @@ module.exports = function (RED) {
                 if(Array.isArray(query)){
                     requestingNode.setStatus('execute');
                     const _promises = [];
-                    query.forEach(function (e, i) {   
+                    query.forEach((e, i)=>{   
                         // requestingNode.log("execution", e.sql);
                         if(Array.isArray(e.param)){
                             const promise = node.connection.executeMany(e.sql, e.param, options);
@@ -51,7 +54,15 @@ module.exports = function (RED) {
                         results.forEach(function (e, i){
                             if(resultAction === "single"){
                                 if(query[i].name != '' && query[i].name != '_'){
-                                    RED.util.setObjectProperty(msg, query[i].name, e.rowsAffected ? e :  e.rows, true);
+                                    let res = null;
+                                    if(e.rowsAffected){
+                                        res = e;
+                                    }else if(e.outBinds){
+                                        res = e.outBinds;
+                                    }else if(e.rows){
+                                        res = e.rows;
+                                    }
+                                    RED.util.setObjectProperty(msg, query[i].name, res, true);
                                 }
                             }
                         });
@@ -59,8 +70,8 @@ module.exports = function (RED) {
                         requestingNode.send([msg,null]);
                     })
                     .catch(function(error) {
-                        requestingNode.setStatus('error');
                         node.connection.rollback();
+                        requestingNode.setStatus('error');
                         RED.util.setObjectProperty(msg, errorName, error.message, true);
                         requestingNode.send([null,msg]);
                     });
