@@ -109,9 +109,7 @@ RED.nodes.registerType("oracle-server", {
         connectiontype: { value: "Classic" },
         instantclientpath: { value: "" },
         host: { value: "localhost", required: false },
-        port: { value: 1521, required: false, validate: function (v) {
-                return v == null || v.match(/^(\s*|\d+|null)$/);
-            } },
+        port: { value: 1521, required: false},
         reconnect: { value: true },
         reconnecttimeout: { value: 5000, validate: RED.validators.number() },
         db: { value: "", required: false },
