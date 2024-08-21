@@ -1,0 +1,212 @@
+[
+    {
+        "id": "bbeef331061dbc75",
+        "type": "inject",
+        "z": "744f3764ad71649b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 235,
+        "y": 125,
+        "wires": [
+            [
+                "be578a52f41e5948"
+            ]
+        ]
+    },
+    {
+        "id": "7e07bc5472fe464a",
+        "type": "group",
+        "z": "744f3764ad71649b",
+        "name": "simple SQL select with move of result to payload",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "3680a299f05a563c",
+            "be578a52f41e5948",
+            "db21439dac264424",
+            "d58124eabb04458d",
+            "b30dc6f6bb6b815a",
+            "988377cecd21e9e2",
+            "58e3dd895dd84aef"
+        ],
+        "x": 179,
+        "y": 194,
+        "w": 882,
+        "h": 192
+    },
+    {
+        "id": "3680a299f05a563c",
+        "type": "oracle-exec",
+        "z": "744f3764ad71649b",
+        "g": "7e07bc5472fe464a",
+        "name": "omvicIntegration",
+        "usequery": false,
+        "prepare": false,
+        "error": "error",
+        "remove": false,
+        "query": [],
+        "server": "9fe0a64559e3b2b4",
+        "resultaction": "single",
+        "x": 485,
+        "y": 285,
+        "wires": [
+            [
+                "d58124eabb04458d",
+                "58e3dd895dd84aef"
+            ],
+            [
+                "b30dc6f6bb6b815a"
+            ]
+        ]
+    },
+    {
+        "id": "be578a52f41e5948",
+        "type": "template",
+        "z": "744f3764ad71649b",
+        "g": "7e07bc5472fe464a",
+        "name": "select sysdate",
+        "field": "query",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "select sysdate from dual",
+        "output": "str",
+        "x": 285,
+        "y": 284,
+        "wires": [
+            [
+                "db21439dac264424",
+                "3680a299f05a563c"
+            ]
+        ]
+    },
+    {
+        "id": "db21439dac264424",
+        "type": "debug",
+        "z": "744f3764ad71649b",
+        "g": "7e07bc5472fe464a",
+        "name": "query",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "query",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 455,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "d58124eabb04458d",
+        "type": "change",
+        "z": "744f3764ad71649b",
+        "g": "7e07bc5472fe464a",
+        "name": "",
+        "rules": [
+            {
+                "t": "move",
+                "p": "result",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 740,
+        "y": 285,
+        "wires": [
+            [
+                "988377cecd21e9e2"
+            ]
+        ]
+    },
+    {
+        "id": "b30dc6f6bb6b815a",
+        "type": "debug",
+        "z": "744f3764ad71649b",
+        "g": "7e07bc5472fe464a",
+        "name": "error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "error",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 345,
+        "wires": []
+    },
+    {
+        "id": "988377cecd21e9e2",
+        "type": "debug",
+        "z": "744f3764ad71649b",
+        "g": "7e07bc5472fe464a",
+        "name": "payload",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 955,
+        "y": 285,
+        "wires": []
+    },
+    {
+        "id": "58e3dd895dd84aef",
+        "type": "debug",
+        "z": "744f3764ad71649b",
+        "g": "7e07bc5472fe464a",
+        "name": "result",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "result",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 235,
+        "wires": []
+    },
+    {
+        "id": "9fe0a64559e3b2b4",
+        "type": "oracle-server",
+        "connectionname": "OmvicIntegration",
+        "tnsname": "",
+        "connectiontype": "Classic",
+        "instantclientpath": "",
+        "host": "${oracledb_banner_host}",
+        "port": "1521",
+        "reconnect": true,
+        "reconnecttimeout": "10000",
+        "db": "${oracledb_banner_db}"
+    }
+]

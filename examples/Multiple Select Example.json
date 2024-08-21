@@ -1,0 +1,74 @@
+[
+    {
+        "id": "ab88faed1d6b2e88",
+        "type": "oracle-exec",
+        "z": "9fc5abcc997745b6",
+        "g": "b844959968a2a24a",
+        "name": "Get student info",
+        "usequery": true,
+        "prepare": false,
+        "error": "error",
+        "remove": true,
+        "query": [
+            {
+                "sql": "select count(*) as Found from spriden where spriden_id= :studentId and spriden_change_ind is null",
+                "name": "Found",
+                "param": {
+                    "type": "msg",
+                    "value": "payload"
+                }
+            },
+            {
+                "sql": "select a.spraddr_street_line1 line1,a.spraddr_street_line2 line2,a.spraddr_street_line3 line3, a.spraddr_city city, a.spraddr_stat_code province, a.spraddr_zip postal, a.spraddr_natn_code country from spraddr a inner join spriden i on a.spraddr_pidm=i.spriden_pidm where i.spriden_id = :studentId and i.spriden_Change_ind is null and a.spraddr_status_ind is null and spraddr_atyp_code='MA' and (spraddr_to_date is null or spraddr_to_date < sysdate)",
+                "name": "Addresses",
+                "param": {
+                    "type": "msg",
+                    "value": "payload"
+                }
+            },
+            {
+                "sql": "select a.sprtele_phone_area||a.sprtele_phone_number as phone from sprtele a inner join spriden i on a.sprtele_pidm=i.spriden_pidm where i.spriden_id = :studentId and i.spriden_Change_ind is null and a.sprtele_status_ind is null and sprtele_tele_code='MA' order by a.sprtele_primary_ind desc",
+                "name": "Phones",
+                "param": {
+                    "type": "msg",
+                    "value": "payload"
+                }
+            },
+            {
+                "sql": "      SELECT sum(nvl(tbraccd_balance, 0)) as Balance\n      FROM tbraccd t\n      inner join spriden s on s.spriden_pidm=tbraccd_pidm\n      where\n      s.spriden_id=:studentId\n      and s.spriden_change_ind is null",
+                "name": "Balance",
+                "param": {
+                    "type": "msg",
+                    "value": "payload"
+                }
+            }
+        ],
+        "server": "f0e90790a37f3f2f",
+        "resultaction": "single",
+        "x": 900,
+        "y": 460,
+        "wires": [
+            [
+                "dd240cc4538cbe2c",
+                "e29e8d7b26bd1925"
+            ],
+            [
+                "a113e1fb652deb30",
+                "35b739b85ac652f8"
+            ]
+        ]
+    },
+    {
+        "id": "f0e90790a37f3f2f",
+        "type": "oracle-server",
+        "connectionname": "bannerCibcIntegration",
+        "tnsname": "",
+        "connectiontype": "Classic",
+        "instantclientpath": "",
+        "host": "${oracledb_banner_host}",
+        "port": "1521",
+        "reconnect": true,
+        "reconnecttimeout": "5000",
+        "db": "${oracledb_banner_db}"
+    }
+]
